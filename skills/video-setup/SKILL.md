@@ -1,6 +1,6 @@
 ---
 name: video-setup
-description: First run of the video agent skills: tools, the video-agent/ folder, the creator's voice.md, permissions, optional Treg. Use when the user says setup, onboarding, "start here", configure, connect my account, Treg, first time using video-script, video-edit or video-viral, or wants to update their voice, niche, CTA or brand color. Checks Node, ffmpeg, yt-dlp and git with install commands for macOS, Windows and Linux, writes voice.md from their own videos or a short interview, pre-approves the tool commands in .claude/settings.json, and optionally connects Treg for TikTok, Instagram and their own stats.
+description: First run of the video agent skills - tools, the video-agent/ folder, the creator's voice.md, permissions, optional Treg. Use when the user says setup, onboarding, "start here", configure, connect my account, Treg, first time using video-script, video-edit or video-viral, or wants to update their voice, niche, CTA or brand color. Checks Node, ffmpeg, yt-dlp and git with install commands for macOS, Windows and Linux, writes voice.md from their own videos or a short interview, pre-approves the tool commands in .claude/settings.json, and optionally connects Treg for TikTok, Instagram and their own stats.
 argument-hint: "[tools | voice | permissions | treg]"
 allowed-tools: Bash(node -v) Bash(ffmpeg -version) Bash(ffprobe -version) Bash(yt-dlp --version) Bash(deno --version) Bash(git --version)
 ---
