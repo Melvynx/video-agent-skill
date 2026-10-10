@@ -1,28 +1,16 @@
----
-name: video-human
-description: Makes a script, caption, post or video description sound like the creator instead of a chat model. Use when the user says humanize, sounds like AI, sounds robotic, anti-AI, make it sound like me, clean this script, or before posting any text written with AI. Removes invisible characters, swaps AI-sounding words (English and French lists, plus the creator's "never use" words), rewrites the patterns that give AI text away, checks that every number, name and placeholder survived, and scores the text before and after.
-argument-hint: "[check] <file, slug or text>"
-allowed-tools: Bash(grep *) Bash(perl -CSD -pi -e *)
----
+# Humanize
 
-# Video Human
-
-Text that sounds like the creator talking, not like a chat model writing. Same meaning, same facts, fewer tells.
+Text that sounds like the creator talking, not like a chat model writing. Same meaning, same facts, fewer tells. Used as the last pass of every script, and on its own with `/video-script humanize <text>` for captions, descriptions, posts and emails.
 
 The goal is to sound like the person, not to fool a detector. Detectors are unreliable; viewers are not.
-
-## Modes
-
-- `/video-human <file, script slug or pasted text>` → cleans it and shows what changed.
-- `/video-human check <...>` → only the report, nothing changed.
-
-A script slug is looked up in `video-agent/scripts/`. Talk to the creator in their language; clean the text in its own language.
 
 ## Before cleaning
 
 1. Read `video-agent/voice.md` if it exists: "Words I use a lot" (never replace those), "Words I never use" (always replace those), "How I sound" (pace, energy, how they open and close).
-2. Read [references/ai-tells.md](references/ai-tells.md).
+2. Read [ai-tells.md](ai-tells.md).
 3. Note every fact in the text: numbers, names, brands, quotes, `{{placeholders}}`, links, the ask. They come out unchanged.
+
+Clean the text in its own language.
 
 ## 1. Invisible characters
 
@@ -53,11 +41,11 @@ French text: a no-break space before `: ; ! ?` and inside `« »` is correct typ
 
 ## 3. Words
 
-Go through the lists in [ai-tells.md](references/ai-tells.md) and the creator's "Words I never use". Replace each hit with the plain word a person would say, or cut it when the sentence works without it. Never replace a word that is in their "Words I use a lot", even if it is on a list.
+Go through the lists in [ai-tells.md](ai-tells.md) and the creator's "Words I never use". Replace each hit with the plain word a person would say, or cut it when the sentence works without it. Never replace a word that is in their "Words I use a lot", even if it is on a list.
 
 ## 4. Structure
 
-The patterns in the "Structure" part of [ai-tells.md](references/ai-tells.md). Rewrite each one so the line says its point directly. The meaning stays, the shape changes. At most one false contrast ("It's not X, it's Y") per text, and only when X is something people really believe.
+The patterns in the "Structure" part of [ai-tells.md](ai-tells.md). Rewrite each one so the line says its point directly. The meaning stays, the shape changes. At most one false contrast ("It's not X, it's Y") per text, and only when X is something people really believe.
 
 ## 5. Sound
 
@@ -99,9 +87,9 @@ End the report with a score, before and after: `score 4/10 → 9/10 PASS`. Five 
 
 PASS = 9 or more with Facts at 2. Under that, do another pass or say what blocks it.
 
-`check` mode: the same report with the suggested changes, the score before, plus a count of tells per kind.
+`humanize check` mode: the same report with the suggested changes, the score before, plus a count of tells per kind. Nothing is changed.
 
-## Honest limits
+## Limits
 
 - Not a way to pass AI detectors, and no promise about them. The aim is the creator's voice.
 - A thin voice.md gives a clean but neutral text. The more real words of theirs it has, the more the result sounds like them.

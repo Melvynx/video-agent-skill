@@ -19,7 +19,8 @@ A cut is only safe in a real silence: check the gaps between words against `sile
 
 ## Framing
 
-- Output 1080x1920, 30 fps. A horizontal take is cropped to the center (the face must be near the middle).
+- Short: 1080x1920, 30 fps. A horizontal take is cropped to the center (the face must be near the middle).
+- Long (a full YouTube video): 1920x1080, 30 fps, from a horizontal take. Captions low in the frame (y 800 to 980), callouts small in the upper right so they never cover the face, pauses over 0.5 s cut instead of 0.35 s.
 - **Punch-in**: every cut alternates between full frame (1.0) and a light zoom (1.12). A piece shorter than 0.8 s keeps the previous framing. That hides the jump of the cut and gives rhythm without effects.
 - **Safe zone**: all text stays between y 230 and y 1440, and left of x 850 from y 900 down. The apps cover the rest with their tabs, buttons, name and description.
 

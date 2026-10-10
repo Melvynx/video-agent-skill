@@ -1,15 +1,15 @@
 ---
-name: video-repurpose
-description: Turns one long video (YouTube link, podcast, webinar, livestream, or a local file) into shorts. Use when the user says repurpose, long video to shorts, clips from my video, podcast clips, cut my YouTube video into shorts, or gives a long video link. Finds clips that stand alone (one idea, 20 to 60 seconds) and hands them to video-edit as takes, and writes new scripts in the video-script format from the ideas too spread out to clip. Reads YouTube captions and chapters with yt-dlp, or transcribes a local file with the video-edit studio.
+name: long-to-short-videos
+description: Turns one long video (YouTube link, podcast, webinar, livestream, or a local file) into finished vertical shorts. Use when the user says long to short, repurpose, long video to shorts, clips from my video, podcast clips, cut my YouTube video into shorts, or gives a long video link. Finds clips that stand alone (one idea, 20 to 60 seconds), scores them, cuts them and edits each one with video-edit (captions, cuts, hook card, callouts, 1080x1920), and writes new scripts in the video-script format from the ideas too spread out to clip. Reads YouTube captions and chapters with yt-dlp, or transcribes a local file with the video-edit studio.
 argument-hint: "<YouTube link or video file>"
-allowed-tools: Bash(node -v) Bash(yt-dlp *) Bash(ffmpeg *) Bash(ffprobe *) Bash(node sub.mjs *)
+allowed-tools: Bash(node -v) Bash(yt-dlp *) Bash(ffmpeg *) Bash(ffprobe *) Bash(node sub.mjs *) Bash(npx remotion *)
 ---
 
-# Video Repurpose
+# Long to short videos
 
-One long video in, a plan of shorts out: `video-agent/repurpose/<source>.md`. Then the clips become takes for `/video-edit`, and the new scripts join the week in `video-agent/scripts/`.
+One long video in, finished shorts out. First a plan (`video-agent/repurpose/<source>.md`), then each picked clip is cut into a take and edited by `/video-edit` into `video-agent/edits/<slug>/final.mp4`. The ideas too spread out to clip become new scripts in `video-agent/scripts/`.
 
-Preflight: `yt-dlp --version && ffmpeg -version` (plus `node -v` for a local file). Anything missing: `/video-setup tools`.
+Preflight: `yt-dlp --version && ffmpeg -version && node -v`. Anything missing: `/video-setup tools`. The edit needs the `video-edit` skill installed next to this one.
 
 Talk to the creator in their language. `<source>`: a short slug for the long video, lowercase, dashes, no dots.
 
@@ -130,9 +130,17 @@ Then each clip becomes a take. Caption times are approximate (about half a secon
 ffmpeg -ss <start in seconds minus 0.5> -i "video-agent/takes/<source>-long.mp4" -t <length plus 1> -c:v libx264 -crf 18 -preset veryfast -pix_fmt yuv420p -c:a aac -b:a 192k -ar 48000 "video-agent/takes/<slug>.mp4"
 ```
 
-Then `/video-edit <slug>` for each clip, with its on-screen hook and callouts from the plan. A horizontal video is cropped to the center: if the speaker isn't in the middle (two people, a slide on the side), say so before editing.
+## 7. Edit the clips
 
-Delete `video-agent/.tmp/` when the plan is done.
+Each clip is now a take. Edit them one by one with the `video-edit` skill, in 9:16, with the plan's on-screen hook as the hook card and its callouts. The transcript of the long video is only a guide: video-edit transcribes each clip again for word-exact captions, and trims the 0.5 s margins to the word.
+
+- The studio is set up once (video-edit step 2); every clip after the first goes straight to transcription.
+- Several clips: say the total time first (about 1 minute of transcription plus 3 to 5 minutes of render per clip on a laptop). With sub-agents available, run one agent per clip, at most 2 at a time (renders share the machine); each one follows video-edit for its slug and nothing else.
+- A horizontal video is cropped to the center: if the speaker isn't in the middle (two people, a slide on the side), say so before editing.
+
+At the end, show one line per short: slug, length, path of `final.mp4`, and offer `/video-publish` for the ones they like.
+
+Delete `video-agent/.tmp/` when the shorts are done.
 
 ## Honest limits
 

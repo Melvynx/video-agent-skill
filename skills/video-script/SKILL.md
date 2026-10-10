@@ -1,7 +1,8 @@
 ---
 name: video-script
-description: Writes short-form video scripts (YouTube Shorts, TikTok, Instagram Reels, 30 to 60 s) in the creator's own voice from video-agent/voice.md. Use when the user asks for scripts, script ideas, "write my shorts", this week's videos, a hook, a better hook, or to rewrite or tighten a script. Starts from what happened in their week, writes 3 hooks per script from different formulas, scores them, adds a re-hook, checks timing at their pace, adds visual notes, and saves the week to video-agent/scripts/.
-argument-hint: "[topic | hook <topic> | rewrite <script>]"
+description: Writes short-form video scripts (YouTube Shorts, TikTok, Instagram Reels, 30 to 60 s) in the creator's own voice from video-agent/voice.md, with optimized hooks and a humanize pass so nothing sounds like AI. Use when the user asks for scripts, script ideas, "write my shorts", this week's videos, a hook, a better hook, to rewrite or tighten a script, or to humanize any text (humanize, sounds like AI, sounds robotic, make it sound like me, a caption or description before posting). Starts from what happened in their week, writes 3 hooks per script from 22 formulas, scores them, adds a re-hook, checks timing at their pace, adds visual notes, removes AI tells (invisible characters, AI words in English and French, AI sentence shapes) while keeping every fact, and saves the week to video-agent/scripts/.
+argument-hint: "[topic | hook <topic> | rewrite <script> | humanize [check] <text or file>]"
+allowed-tools: Bash(grep *) Bash(perl -CSD -pi -e *)
 ---
 
 # Video Script
@@ -14,8 +15,9 @@ Read, in this order:
 
 1. `video-agent/voice.md`: who they are, who they talk to, how they sound, what they believe, their proof, the ask. Missing: offer `/video-setup` (about 10 minutes, recommended), or ask 4 questions now (what they do, for whom, the language they record in, what viewers should do after watching).
 2. `video-agent/swipe.md` if it exists: hooks that worked in their niche (from `/video-viral`).
-3. The last 20 lines of `video-agent/log.md`: topics and hook formulas already used. Never repeat a topic from the last 4 weeks unless they ask.
-4. [references/hooks.md](references/hooks.md) and [references/script-rules.md](references/script-rules.md).
+3. `video-agent/audit.md` if it exists: what works on their own account (from `/video-audit`). Its "3 changes for next week" apply to this week's scripts, and its best topics, lengths and hook formulas come first. Their own data beats the niche's.
+4. The last 20 lines of `video-agent/log.md`: topics and hook formulas already used. Never repeat a topic from the last 4 weeks unless they ask.
+5. [references/hooks.md](references/hooks.md), [references/script-rules.md](references/script-rules.md) and [references/humanize.md](references/humanize.md).
 
 Talk to them in their language, and write the scripts in the language they record in.
 
@@ -24,13 +26,16 @@ Talk to them in their language, and write the scripts in the language they recor
 - `/video-script` → a week of scripts (default 5).
 - `/video-script <topic or idea>` → one script.
 - `/video-script hook <script or topic>` → 10 hooks, scored, best 3 on top.
-- `/video-script rewrite <script>` → their script, tightened: same content and facts, better hook, shorter lines, timing checked. Show what changed.
+- `/video-script rewrite <script>` → their script, tightened: same content and facts, better hook, shorter lines, timing checked, humanized. Show what changed.
+- `/video-script humanize <file, script slug or pasted text>` → any text (script, caption, description, post) made to sound like them: [references/humanize.md](references/humanize.md), with its before and after score. `humanize check` only reports.
+
+For `hook` and `humanize`, skip "The week" and "The mix": read voice.md and the references, then do only that job.
 
 ## 1. The week
 
 Ask one question: **"What actually happened this week?"** Give prompts so it's easy: a result (with the number), a mistake, a question a client or a follower asked, something they learned or tested, a tool they used, an opinion that came up in a conversation, something they disagree with.
 
-Real material beats ideas. If they have nothing, propose 5 topics from voice.md (beliefs, mistakes their viewer makes, proof) and swipe.md, and let them pick.
+Real material beats ideas. If they have nothing, propose 5 topics from voice.md (beliefs, mistakes their viewer makes, proof), audit.md (their topics that over-perform) and swipe.md, and let them pick.
 
 Then: how many videos (default 5) and is there something to promote this week (yes → one Offer video, no → none).
 
@@ -57,7 +62,7 @@ Show the plan as a table (number, type, topic, hook formula you'll try first) an
 5. **Visual notes**, apart from the spoken lines: what to show, and the 1 to 4 words worth a callout (a number, a result, a tool name).
 6. **Timing**: count the words, divide by their pace (voice.md, else 160 wpm). Check every beat rule in script-rules.md. Fix before showing.
 7. **Facts**: every number, name and result comes from voice.md or what they told you. Anything else becomes `{{your number}}`, `{{client name}}`, and is listed under "To fill".
-8. **Last pass**: read the script as if spoken aloud. Remove what they would never say (voice.md "Words I never use"), and apply the `video-human` checks if that skill is installed.
+8. **Humanize**: run [references/humanize.md](references/humanize.md) on the script (steps 1 to 6, no report per script). Read it as if spoken aloud. Nothing they would never say (voice.md "Words I never use"), no em dash, no AI shape, every fact intact. Its score goes in the script's **Score** line.
 
 ## 4. Format
 
@@ -102,7 +107,7 @@ Follow for one script fix a day.
 - (Stop / start) Stop explaining in your hook. Start with the result.
 - (Their words) "My hook is fine, it's the algorithm."
 
-**Score:** hook 8/10 · 111 words · 40 s at 165 wpm
+**Score:** hook 8/10 · human 10/10 · 111 words · 40 s at 165 wpm
 **To fill:** {{number}}
 ````
 
@@ -125,7 +130,7 @@ After a yes, add one line per script to `video-agent/log.md`:
 
 ## 5. Hand off
 
-Show the week's table and the first script in full, then ask what to change. Next steps: record each script (phone, camera or webcam, one take per script, into `video-agent/takes/<slug>.mp4`), then `/video-edit <slug>`.
+Show the week's table and the first script in full, then ask what to change. Next steps: record each script (phone, camera or webcam, one take per script, into `video-agent/takes/<slug>.mp4`), then `/video-edit <slug>`, then `/video-publish <slug>`.
 
 ## Honest limits
 

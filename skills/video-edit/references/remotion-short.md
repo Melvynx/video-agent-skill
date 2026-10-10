@@ -1,6 +1,6 @@
-# The `Short` composition
+# The `Short` and `Wide` compositions
 
-Add this to the Remotion studio (`video-agent/studio/`) once. It plays the kept ranges of a take back to back and draws the style from [style.md](style.md) on top: punch-in zooms, word captions, the hook card, callouts and the progress bar. Everything it needs comes from one edit file per video, so the code never changes between videos.
+Add this to the Remotion studio (`video-agent/studio/`) once. One component, two sizes: `Short` (1080x1920, vertical, for Shorts, Reels and TikTok) and `Wide` (1920x1080, horizontal, for a full YouTube video). It plays the kept ranges of a take back to back and draws the style from [style.md](style.md) on top: punch-in zooms, word captions, the hook card, callouts and the progress bar. Everything it needs comes from one edit file per video, so the code never changes between videos.
 
 Tested with Remotion 4.0.534 and the `template-tiktok` starter.
 
@@ -44,15 +44,21 @@ export type ShortProps = {
   ranges: Range[]; // the kept parts of the take, in source ms, in order
   hook: { text: string; seconds: number } | null; // *word* = accent marker
   callouts: { text: string; atMs: number }[]; // atMs = source ms of the word
+  showCaptions?: boolean; // default true; false for a long video that gets an .srt instead
   words?: Caption[]; // filled by calculateShortMetadata, in output ms
 };
 
 const FPS = 30;
 const toFrame = (ms: number) => Math.round((ms / 1000) * FPS);
 
-// Platform safe zone on 1080x1920: text stays between y 230 and y 1440,
+// Where the captions sit.
+// Vertical (1080x1920): the platform safe zone, text between y 230 and y 1440,
 // and left of x 850 below y 900 (the like, comment and share buttons).
-const CAPTION_BOX = { top: 1150, left: 60, width: 780, height: 260 };
+// Horizontal (1920x1080): the lower part of the frame, above YouTube's progress bar.
+const captionBox = (width: number, height: number) =>
+  width > height
+    ? { top: 800, left: 260, width: 1400, height: 180 }
+    : { top: 1150, left: 60, width: 780, height: 260 };
 
 // 2-frame audio fade at both ends of a kept range, so a cut never clicks.
 const fade = (f: number, frames: number) =>
@@ -92,7 +98,7 @@ export const calculateShortMetadata: CalculateMetadataFunction<ShortProps> = asy
   };
 };
 
-export const Short: React.FC<ShortProps> = ({ video, accent, ranges, hook, callouts, words = [] }) => {
+export const Short: React.FC<ShortProps> = ({ video, accent, ranges, hook, callouts, showCaptions = true, words = [] }) => {
   const parts = useMemo(() => layout(ranges), [ranges]);
   const { pages } = useMemo(
     () => createTikTokStyleCaptions({ captions: words, combineTokensWithinMilliseconds: 600 }),
@@ -124,7 +130,7 @@ export const Short: React.FC<ShortProps> = ({ video, accent, ranges, hook, callo
         ))}
       </Series>
 
-      {pages.map((page, i) => {
+      {(showCaptions ? pages : []).map((page, i) => {
         const next = pages[i + 1];
         const from = toFrame(page.startMs);
         const until = toFrame(next ? next.startMs : page.startMs + page.durationMs);
@@ -159,12 +165,13 @@ export const Short: React.FC<ShortProps> = ({ video, accent, ranges, hook, callo
 
 const CaptionPage: React.FC<{ page: TikTokPage; accent: string }> = ({ page, accent }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
+  const box = captionBox(width, height);
   const now = page.startMs + (frame / fps) * 1000;
   const pop = spring({ frame, fps, config: { damping: 200 }, durationInFrames: 4 });
-  const fontSize = Math.min(110, Math.floor(CAPTION_BOX.width / (page.text.trim().length * 0.72)));
+  const fontSize = Math.min(110, Math.floor(box.width / (page.text.trim().length * 0.72)));
   return (
-    <AbsoluteFill style={{ ...CAPTION_BOX, justifyContent: "center", alignItems: "center" }}>
+    <AbsoluteFill style={{ ...box, justifyContent: "center", alignItems: "center" }}>
       <div
         style={{
           fontFamily: FONT,
@@ -229,12 +236,20 @@ const HookCard: React.FC<{ text: string; accent: string; frames: number }> = ({ 
 
 const Callout: React.FC<{ text: string; accent: string; frames: number }> = ({ text, accent, frames }) => {
   const frame = useCurrentFrame();
-  const { fps, width } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
   const pop = spring({ frame, fps, config: { damping: 12 }, durationInFrames: 8 });
   const exit = interpolate(frame, [frames - 5, frames], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const fontSize = Math.min(240, Math.floor((width * 0.8) / (text.length * 0.72)));
+  // Horizontal: smaller, in the upper right, so it never covers a face in the middle.
+  const wide = width > height;
+  const fontSize = Math.min(wide ? 180 : 240, Math.floor((width * (wide ? 0.35 : 0.8)) / (text.length * 0.72)));
   return (
-    <AbsoluteFill style={{ top: "26%", bottom: undefined, height: "auto", alignItems: "center" }}>
+    <AbsoluteFill
+      style={
+        wide
+          ? { top: "10%", left: "60%", width: "36%", bottom: undefined, height: "auto", alignItems: "center" }
+          : { top: "26%", bottom: undefined, height: "auto", alignItems: "center" }
+      }
+    >
       <div
         style={{
           fontFamily: FONT,
@@ -271,12 +286,21 @@ const ProgressBar: React.FC<{ accent: string }> = ({ accent }) => {
 };
 ```
 
-## 3. Register it in `src/Root.tsx`
+## 3. Register them in `src/Root.tsx`
 
-Keep the template's composition and add `Short` next to it (wrap both in `<>...</>`):
+Keep the template's composition and add `Short` and `Wide` next to it (wrap them all in `<>...</>`). Same component, same edit file, only the size changes:
 
 ```tsx
 import { calculateShortMetadata, Short } from "./Short";
+
+const editDefaults = {
+  video: "take.mp4",
+  captions: "take.json",
+  accent: "#FFD400",
+  ranges: [],
+  hook: null,
+  callouts: [],
+};
 
 // inside RemotionRoot's return:
 <Composition
@@ -285,14 +309,15 @@ import { calculateShortMetadata, Short } from "./Short";
   calculateMetadata={calculateShortMetadata}
   width={1080}
   height={1920}
-  defaultProps={{
-    video: "take.mp4",
-    captions: "take.json",
-    accent: "#FFD400",
-    ranges: [],
-    hook: null,
-    callouts: [],
-  }}
+  defaultProps={editDefaults}
+/>
+<Composition
+  id="Wide"
+  component={Short}
+  calculateMetadata={calculateShortMetadata}
+  width={1920}
+  height={1080}
+  defaultProps={editDefaults}
 />
 ```
 
@@ -320,15 +345,18 @@ One per video. Every time is in **source** milliseconds (the times in the captio
 - `ranges`: the parts to keep, in order, never overlapping. The output length is their sum.
 - `hook`: 6 words or fewer. `*word*` gets the accent marker. `null` for no card.
 - `callouts`: `atMs` = the `startMs` of the word the callout rides on. A callout inside a cut part is skipped.
+- `showCaptions`: optional, `false` to render without burned-in captions (a long YouTube video often ships its `.srt` instead).
 
 ## 5. Commands (from `video-agent/studio/`)
 
+`<comp>` is `Short` (vertical) or `Wide` (horizontal).
+
 ```bash
 # QC frames (Read the PNGs and check them)
-npx remotion still Short out/<slug>-qc-<frame>.png --frame=<frame> --props=public/<slug>.edit.json
+npx remotion still <comp> out/<slug>-qc-<frame>.png --frame=<frame> --props=public/<slug>.edit.json
 
 # Full render
-npx remotion render Short out/<slug>.mp4 --props=public/<slug>.edit.json
+npx remotion render <comp> out/<slug>.mp4 --props=public/<slug>.edit.json
 
 # Live preview in the browser, scrub and tweak (optional)
 npx remotion studio --props=public/<slug>.edit.json
